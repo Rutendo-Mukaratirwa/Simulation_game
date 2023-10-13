@@ -1,0 +1,504 @@
+pip install pandas
+pip install tabulate
+pip install dash pandas
+
+
+from tabulate import tabulate
+import pandas as pd
+import random
+
+
+import time
+import sys
+
+def type_text(text, size=500, color="red"):
+    # ANSI escape codes for text formatting
+    format_string = f"\033[91m\033[1;{size}m{{}}\033[0m"
+
+    for char in text:
+        sys.stdout.write(format_string.format(char))
+        sys.stdout.flush()
+        time.sleep(0.05)  # Adjust the sleep duration for the typing speed
+
+# Welcome message with animation
+print("\n" * 5)  # Clear the console (adjust the number of empty lines as needed)
+type_text("Welcome to Climate Clash!\n")
+time.sleep(1)  # Pause for a moment
+type_text("The goal of the game is to manage your chosen country's agriculture strategy to adapt to climate change.\n")
+
+#read in data
+crop_data_path = 'C:/Users/Mukaratirwar/OneDrive - Food and Agriculture Organization/Desktop/Simulation_game/Prototype_test_data/Crop_database.csv'
+country_data_path = 'C:/Users/Mukaratirwar/OneDrive - Food and Agriculture Organization/Desktop/Simulation_game/Prototype_test_data/Country_test_data.csv'
+strategy_data_path = 'C:/Users/Mukaratirwar/OneDrive - Food and Agriculture Organization/Desktop/Simulation_game/Prototype_test_data/policies_data.csv'
+
+# Load XLSX files into DataFrames
+crop_data = pd.read_csv(crop_data_path)
+country_data = pd.read_csv(country_data_path)
+strategy_data = pd.read_csv(strategy_data_path)
+
+# Display available levels
+levels = [1, 2, 3, 4]
+print("\nDifficulty Levels:")
+for level in levels:
+    print(f"Level {level}")
+
+# Allow the player to choose a difficulty level
+selected_level = int(input("\nEnter the number of the difficulty level you want to play (1-4): "))
+
+# Filter the country data for the selected level
+filtered_country_data = country_data[country_data['Level'] == selected_level]
+
+# Create a list of unique country names for the selected level
+unique_country_names = filtered_country_data['Name'].unique()
+
+# Display available country names for the selected level
+print("\nCountry Names:")
+for i, country_name in enumerate(unique_country_names):
+    print(f"{i + 1}. {country_name}")
+
+# Allow the player to choose a country name
+selected_country_index = int(input("\nEnter the number of the country you want to choose: ")) - 1
+selected_country = unique_country_names[selected_country_index]
+
+# Retrieve and display country data
+country_data_selected = filtered_country_data[filtered_country_data['Name'] == selected_country]
+selected_country_data = country_data_selected[[
+    'Avg. Temperature C',
+    'Avg. Precipitation (mm)',
+    'Soil_drainage',
+    'Soil_fertility (class)',
+    'Intensity_of_cropland (%)',
+    'Elevation (masl)',
+    'Exclusion_areas (km2)',
+    'Agro-ecological_zone_class',
+    'Flood (%)',
+    'Drought (%)',
+    'Wildfire (%)'
+]]
+
+# Print the country data in a nicely formatted table
+print("\nSelected Country Data:")
+table_headers = ["Country information", "Value"]
+table_data = []
+
+for col in selected_country_data.columns:
+    parameter = col
+    value = selected_country_data.iloc[0][col]
+ 
+
+   
+
+    table_data.append([parameter, value])
+
+print(tabulate(table_data, headers=table_headers, tablefmt="fancy_grid"))
+
+# Print the name of each crop
+print("Crop Names:")
+crop_names = crop_data['Name '].unique()
+for i, crop_name in enumerate(crop_names):
+    print(f"{i + 1}. {crop_name}")
+
+# Allow the player to choose a crop
+selected_crop_index = int(input("\nEnter the number of the crop you want to learn about: ")) - 1
+selected_crop = crop_names[selected_crop_index]
+
+# Filter the crop data for the selected crop
+selected_crop_data = crop_data[crop_data['Name '] == selected_crop]
+
+# Display the selected crop's information
+#print("\nSelected Crop Information:")
+selected_info = selected_crop_data[[
+    'Temperature (oC)',
+    'Precipitation (mm)',
+    'Soil fertility  ',
+    'Soil salinity',
+    'Soil PH ',
+    'Climate zone',
+    'Prodution system',
+    'Crop cycle',
+    'Labour '
+]]
+
+# Print the crop data in a nicely formatted table
+print("\nSelected Crop Information:")
+table_headers_2 = ["Crop information", "Data"]
+table_data_2 = []
+
+for col in selected_crop_data.columns:
+    parameter = col
+    value = selected_crop_data.iloc[0][col]
+ 
+
+   
+
+    table_data_2.append([parameter, value])
+
+print(tabulate(table_data_2, headers=table_headers_2, tablefmt="fancy_grid"))
+
+# Define a function to assess the crop selection
+def assess_crop_selection(country_data, crop_data):
+    matching_criteria = []  # To store the matching criteria
+
+    # Check if the country's average temperature falls within the crop's temperature range
+    country_avg_temp = country_data['Avg. Temperature C'].iloc[0]
+    crop_temp_range = crop_data['Temperature (oC)'].iloc[0]
+    crop_temp_min, crop_temp_max = map(int, crop_temp_range.split(" to "))
+    if crop_temp_min <= country_avg_temp <= crop_temp_max:
+        matching_criteria.append("Average Temperature")
+
+    # Check if the country's average precipitation falls within the crop's precipitation range
+    country_avg_precip = country_data['Avg. Precipitation (mm)'].iloc[0]
+    crop_precip_range = crop_data['Precipitation (mm)'].iloc[0]
+    crop_precip_min, crop_precip_max = map(int, crop_precip_range.split(" to "))
+    if crop_precip_min <= country_avg_precip <= crop_precip_max:
+        matching_criteria.append("Average Precipitation")
+
+    # Check if the country's soil fertility matches the crop's requirement (high)
+    country_soil_fertility = country_data['Soil_fertility (class)'].iloc[0]
+    if country_soil_fertility.lower() == 'high':
+        matching_criteria.append("Soil Fertility")
+
+    # Check if the country's agro-ecological zone matches the crop's climate zone (Tropics)
+    country_agro_ecological_zone = country_data['Agro-ecological_zone_class'].iloc[0]
+    crop_climate_zone = crop_data['Climate zone'].iloc[0]
+    if 'Tropics' in country_agro_ecological_zone and 'Tropics' in crop_climate_zone:
+        matching_criteria.append("Agro-ecological Zone and Climate Zone")
+
+    return matching_criteria
+
+# Assess the crop selection
+matching_criteria = assess_crop_selection(country_data_selected, selected_crop_data)
+
+# Determine if it's a good or poor selection based on the score threshold
+score_threshold = 3  # Adjust this threshold as needed
+if len(matching_criteria) >= score_threshold:
+    print("\nGood selection of crop! The following criteria match:")
+    for criteria in matching_criteria:
+        print(f"- {criteria}")
+else:
+    print("\nPoor selection of crop. The matching criteria are:")
+    for criteria in matching_criteria:
+        print(f"- {criteria}")
+
+# Split strategy_data into separate datasets for each group
+policy_maker_data = strategy_data[strategy_data['Player '] == 'Policymaker']
+community_leader_data = strategy_data[strategy_data['Player '] == 'Community Leader']
+farmer_data = strategy_data[strategy_data['Player '] == 'Farmer']
+
+# Assign budgets to each group
+budgets = {'Policymaker': 400, 'Community Leader': 200, 'Farmer': 150}
+
+# Initialize selections for each player
+policy_maker_selections = []
+community_leader_selections = []
+farmer_selections = []
+
+# Function to display available strategies and allow a player to select
+def select_strategy(player_name, player_budget, player_data):
+    player_selections = []  # Initialize player-specific selections list
+
+    print(f"\n{player_name}'s Budget: {player_budget}")
+    
+    while True:
+        print(f"\n{player_name}'s Available Strategies:")
+        for index, row in player_data.iterrows():
+            strategy = row['Stategy  ']
+            price = row['Game price ']
+            print(f"{index + 1}. {strategy} (Price: {price})")
+
+        selection_index = int(input(f"\n{player_name}, select a strategy by entering its number (or enter 0 to finish): "))
+        if selection_index == 0:
+            break
+        elif 1 <= selection_index <= len(player_data):
+            selected_strategy = player_data.iloc[selection_index - 1]
+            strategy_price = selected_strategy['Game price ']
+            if strategy_price <= player_budget:
+                player_budget -= strategy_price
+                player_selections.append(selected_strategy)
+                print(f"{player_name} selected: {selected_strategy['Stategy  ']}")
+                print(f"Remaining Budget for {player_name}: {player_budget}")
+            else:
+                print(f"Insufficient budget. {player_name}'s remaining budget: {player_budget}")
+        else:
+            print("Invalid selection. Please enter a valid number.")
+
+    return player_selections  # Return the selections made by the player
+
+# Policy Maker selects strategies
+policy_maker_selections = select_strategy('Policymaker', budgets['Policymaker'], policy_maker_data)
+
+# Community Leader selects strategies
+community_leader_selections = select_strategy('Community Leader', budgets['Community Leader'], community_leader_data)
+
+# Farmer selects strategies
+farmer_selections = select_strategy('Farmer', budgets['Farmer'], farmer_data)
+
+
+
+# Initialize alignment scores as variables
+alignment_score_policymaker_community_leader = 0
+alignment_score_policymaker_farmer = 0
+alignment_score_community_leader_farmer = 0
+alignment_score_policymaker_community_leader_farmer = 0
+alignment_score_all_players = 0  # Initialize the new variable for all 3 players
+
+def calculate_alignment_score(player1_name, player1_selections, player2_name, player2_selections):
+    player1_numbers = set(int(selection['No.']) for selection in player1_selections)
+    player2_numbers = set(int(selection['No.']) for selection in player2_selections)
+    common_numbers = player1_numbers.intersection(player2_numbers)
+
+    if len(common_numbers) >= 4:
+        alignment = "Good Alignment"
+        alignment_score = 100
+    else:
+        alignment = "Not Good Alignment"
+        alignment_score = 50
+
+    print(f"{player1_name} vs {player2_name}: {alignment} (Alignment Score: {alignment_score})")
+
+    # Update alignment scores as numeric variables
+    if player1_name == 'Policymaker' and player2_name == 'Community Leader':
+        global alignment_score_policymaker_community_leader
+        alignment_score_policymaker_community_leader = alignment_score
+    elif player1_name == 'Policymaker' and player2_name == 'Farmer':
+        global alignment_score_policymaker_farmer
+        alignment_score_policymaker_farmer = alignment_score
+    elif player1_name == 'Community Leader' and player2_name == 'Farmer':
+        global alignment_score_community_leader_farmer
+        alignment_score_community_leader_farmer = alignment_score
+    elif player1_name == 'Policymaker' and player2_name == 'Community Leader and Farmer':
+        global alignment_score_policymaker_community_leader_farmer
+        alignment_score_policymaker_community_leader_farmer = alignment_score
+    elif player1_name == 'Farmer' and player2_name == 'Policymaker and Community Leader':
+        global alignment_score_all_players
+        alignment_score_all_players = alignment_score  # Save the alignment score for all 3 players
+
+# Calculate alignment between all three players
+calculate_alignment_score('Policymaker', policy_maker_selections, 'Community Leader', community_leader_selections)
+calculate_alignment_score('Policymaker', policy_maker_selections, 'Farmer', farmer_selections)
+calculate_alignment_score('Community Leader', community_leader_selections, 'Farmer', farmer_selections)
+calculate_alignment_score('Policymaker', policy_maker_selections, 'Community Leader and Farmer', community_leader_selections + farmer_selections)
+calculate_alignment_score('Farmer', farmer_selections, 'Policymaker and Community Leader', policy_maker_selections + community_leader_selections)
+
+# Display alignment scores
+print("\nAlignment Scores:")
+print(f"Policymaker vs Community Leader: {alignment_score_policymaker_community_leader}")
+print(f"Policymaker vs Farmer: {alignment_score_policymaker_farmer}")
+print(f"Community Leader vs Farmer: {alignment_score_community_leader_farmer}")
+print(f"Policymaker vs Community Leader and Farmer: {alignment_score_policymaker_community_leader_farmer}")
+print(f"All Players (Farmer vs Policymaker and Community Leader): {alignment_score_all_players}")  # Display the alignment score for all 3 players
+
+
+#scoring assessment 
+# Define functions to assign scores based on character values
+def assign_environmental_score(value):
+    value = value.strip() 
+    if value == 'High':
+        return 5
+    elif value == 'Medium':
+        return 3
+    elif value == 'Low':
+        return 1
+    else:
+        return 0  # For undefined values
+
+def assign_economic_score(value):
+    value = value.strip() 
+    if value == 'High':
+        return 5
+    elif value == 'Medium':
+        return 3
+    elif value == 'Low':
+        return 1
+    else:
+        return 0
+
+def assign_social_score(value):
+    value = value.strip() 
+    if value == 'High':
+        return 5
+    elif value == 'Medium':
+        return 3
+    elif value == 'Low':
+        return 1
+    else:
+        return 0
+
+# Calculate scores for each player based on their selected strategies
+def calculate_player_scores(player_name, player_selections):
+    environmental_score = 0
+    economic_score = 0
+    social_score = 0
+
+    for selection in player_selections:
+        environmental_score += assign_environmental_score(selection['Environment Score\n '])
+        economic_score += assign_economic_score(selection['Economic score  '])
+        social_score += assign_social_score(selection['Social Score'])
+
+    return {
+        'Player': player_name,
+        'Environmental Score': environmental_score,
+        'Economic Score': economic_score,
+        'Social Score': social_score
+    }
+
+# Calculate scores for each player
+policy_maker_scores = calculate_player_scores('Policymaker', policy_maker_selections)
+community_leader_scores = calculate_player_scores('Community Leader', community_leader_selections)
+farmer_scores = calculate_player_scores('Farmer', farmer_selections)
+
+# Create a table for scores
+table_data = [
+    ["Player", "Environmental Score", "Economic Score", "Social Score"],
+    [policy_maker_scores['Player'], policy_maker_scores['Environmental Score'], policy_maker_scores['Economic Score'], policy_maker_scores['Social Score']],
+    [community_leader_scores['Player'], community_leader_scores['Environmental Score'], community_leader_scores['Economic Score'], community_leader_scores['Social Score']],
+    [farmer_scores['Player'], farmer_scores['Environmental Score'], farmer_scores['Economic Score'], farmer_scores['Social Score']]
+]
+
+# Calculate the total scores for each player
+policy_maker_total_score = policy_maker_scores['Environmental Score'] + policy_maker_scores['Economic Score'] + policy_maker_scores['Social Score']
+community_leader_total_score = community_leader_scores['Environmental Score'] + community_leader_scores['Economic Score'] + community_leader_scores['Social Score']
+farmer_total_score = farmer_scores['Environmental Score'] + farmer_scores['Economic Score'] + farmer_scores['Social Score']
+
+# Create a table for total scores
+total_scores_data = [
+    ["Player", "Total Score"],
+    [policy_maker_scores['Player'], policy_maker_total_score],
+    [community_leader_scores['Player'], community_leader_total_score],
+    [farmer_scores['Player'], farmer_total_score]
+]
+
+# Print the scores in a table format
+score_table = tabulate(table_data, headers="firstrow", tablefmt="fancy_grid")
+print("\nEnvironmental, Economic, and Social Scores:")
+print(score_table)
+
+# Print the total scores in a table format
+total_score_table = tabulate(total_scores_data, headers="firstrow", tablefmt="fancy_grid")
+print("\nTotal Scores for Each Player:")
+print(total_score_table)
+
+# Save the total scores as variables
+policy_maker_total_score_variable = policy_maker_total_score
+community_leader_total_score_variable = community_leader_total_score
+farmer_total_score_variable = farmer_total_score
+
+
+
+
+# Define functions to assign scores based on character values (unchanged)
+# Define functions to assign scores based on character values
+def assign_drought_score(value):
+    value = value.strip()
+    if value == 'good':
+        return 5
+    elif value == 'fair':
+        return 3
+    elif value == 'bad':
+        return 1
+    elif value == 'no effect':
+        return 0
+    else:
+        return 0  # For undefined values
+
+def assign_flood_score(value):
+    value = value.strip()
+    if value == 'good':
+        return 5
+    elif value == 'fair':
+        return 3
+    elif value == 'bad':
+        return 1
+    elif value == 'no effect':
+        return 0
+    else:
+        return 0  # For undefined values
+
+def assign_wildfire_score(value):
+    value = value.strip()
+    if value == 'good':
+        return 5
+    elif value == 'fair':
+        return 3
+    elif value == 'bad':
+        return 1
+    elif value == 'no effect':
+        return 0
+    else:
+        return 0  # For undefined values
+# Define the possible climate events
+climate_events = ['Drought', 'Flood', 'Wildfire']
+
+# Generate a random climate event
+def generate_climate_event():
+    return random.choice(climate_events)
+
+# Calculate the total value of a single event
+def calculate_event_value(event_type, player_selections):
+    if event_type == 'Drought':
+        return sum(assign_drought_score(selection['Drought ']) for selection in player_selections)
+    elif event_type == 'Flood':
+        return sum(assign_flood_score(selection['Flood']) for selection in player_selections)
+    elif event_type == 'Wildfire':
+        return sum(assign_wildfire_score(selection['Wildfire ']) for selection in player_selections)
+    else:
+        return 0  # No event, so value is 0
+
+# Calculate total event value for all players
+def calculate_total_event_value(event_type, player_selections, selected_level):
+    event_value = calculate_event_value(event_type, player_selections)
+    if selected_level == 1:
+        event_value *= 0.10  # 10% of the total value for level 1
+    elif selected_level == 2:
+        event_value *= 0.30  # 30% of the total value for level 2
+    elif selected_level == 3:
+        event_value *= 0.70  # 70% of the total value for level 3
+    elif selected_level == 4:
+        event_value *= 1.00  # 100% of the total value for level 4
+    else:
+        event_value *= 0.10  # Default behavior for other levels (e.g., 10% for undefined levels)
+    return event_value
+
+# Simulate climate change event
+selected_level = int(input("Enter the selected level (1-4): "))  # Get the selected level from the player's input
+event_type = generate_climate_event()
+
+event_value = calculate_total_event_value(event_type,
+                                           policy_maker_selections + community_leader_selections + farmer_selections,
+                                           selected_level)
+
+# Calculate the maximum points available based on the event type and player selections
+max_points_available = calculate_event_value(event_type, 
+                                             policy_maker_selections + community_leader_selections + farmer_selections)
+
+# Calculate each player's maximum points and actual points
+policy_maker_max_points = calculate_event_value(event_type, policy_maker_selections)
+community_leader_max_points = calculate_event_value(event_type, community_leader_selections)
+farmer_max_points = calculate_event_value(event_type, farmer_selections)
+
+policy_maker_actual_points = policy_maker_max_points if selected_level == 4 else policy_maker_max_points * 0.10
+community_leader_actual_points = community_leader_max_points if selected_level == 4 else community_leader_max_points * 0.10
+farmer_actual_points = farmer_max_points if selected_level == 4 else farmer_max_points * 0.10
+
+# Create a table for results
+table_data = [
+    ["Player", "Maximum Points", "Actual Points"],
+    ["Policy Maker", policy_maker_max_points, policy_maker_actual_points],
+    ["Community Leader", community_leader_max_points, community_leader_actual_points],
+    ["Farmer", farmer_max_points, farmer_actual_points],
+]
+
+# Calculate the total number of points for all players
+total_points = policy_maker_actual_points + community_leader_actual_points + farmer_actual_points
+
+# Print the results in a table format
+result_table = tabulate(table_data, headers="firstrow", tablefmt="fancy_grid")
+print("\nEvent Results:")
+print(result_table)
+
+# Save the total number of points as a variable named 'special_event'
+special_event = total_points
+print(f"Total Points for All Players: {special_event}")
+
+
+#here do to IPCC formular 

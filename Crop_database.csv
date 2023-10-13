@@ -1,0 +1,6 @@
+No.,Name ,Temperature (oC),Precipitation (mm),Soil fertility  ,Soil salinity,Soil PH ,Climate zone,Prodution system,Crop cycle,Labour 
+1,Wheat ,15 to 23 ,750 to 900,high,low (<4 dS/m),6 to 7 ,"Tropical moist and dry , Tropical moist, temperate continental , temperate with humid ,temperate with dry",large scale/commercial,90 to 250 days ,Mechanized
+2,Rice,20 to 30,1500 to 2000,high,low (<4 dS/m),5.5 to 7,"tropical wet & dry (Aw), tropical wet (Ar), subtropical humid (Cf), subtropical dry summer (Cs), subtropical dry winter (Cw)	","intermediate (animal drawn), large scale/commercial	",80 to 180 days,Manual 
+3,Maize,18 to 33,600 to 1200,high,low (<4 dS/m),5 to 7,warmer parts of temperate regions and humid subtropics ,large scale/commercial,65 to 365 days,Mechanized
+4,Coffee,14 to 28,1400 to 2300,high,low (<4 dS/m),5.5 to 7,"tropical wet & dry, subtropical humid, subtropical dry winter",large scale/commercial,210 to 330 days,Mechanized
+5,Cotton ,22 to 32,750 to 1250,moderate,low (<4 dS/m),5.2 to 7.2,"ropical wet & dry, tropical wet, steppe or semiarid, subtropical humid, subtropical dry summer, subtropical dry winter ",large scale/commercial,180 to 210 days,Manual
